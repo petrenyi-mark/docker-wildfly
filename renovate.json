@@ -1,0 +1,180 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Docker base and wildfly base release branches are processed.",
+    "Patch and minor updates for icellmobilsoft docker-base",
+    "Patch and minor updates for wildfly",
+    "Wildfly major updates are manually triggered on main branch."
+  ],
+  "extends": [
+    "config:recommended"
+  ],
+  "baseBranchPatterns": [
+    "main",
+    "/^release\\/docker-wildfly-\\d+\\.\\d+\\.x$/"
+  ],
+  "enabledManagers": [
+    "custom.regex"
+  ],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "commitBodyTable": true,
+  "separateMinorPatch": true,
+  "labels": [
+    "dependencies"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "icellmobilsoft base images (base-java25jre, builder-java21-galleon, builder-nexus-download share one tag)",
+      "managerFilePatterns": ["/(^|/)\\.env$/"],
+      "matchStrings": ["BASE_IMAGE_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "icellmobilsoft/base",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "WildFly version installed via Galleon",
+      "managerFilePatterns": ["/(^|/)\\.env$/"],
+      "matchStrings": ["WILDFLY_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "org.wildfly:wildfly-galleon-pack",
+      "datasourceTemplate": "maven",
+      "versioningTemplate": "maven"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Major and minor updates are disabled by default",
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "All patch updates in one PR, created automatically",
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "groupName": "dependencies",
+      "groupSlug": "patch-updates",
+      "addLabels": [
+        "patch"
+      ]
+    },
+    {
+      "description": "Minor updates are created only after approval on the Dependency Dashboard",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "groupName": "dependencies",
+      "groupSlug": "minor-updates",
+      "enabled": true,
+      "dependencyDashboardApproval": true,
+      "addLabels": [
+        "minor"
+      ]
+    },
+    {
+      "description": "Major updates are created only after approval on the Dependency Dashboard, only on main branch",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "matchBaseBranches": [
+        "main"
+      ],
+      "groupName": "dependencies",
+      "groupSlug": "major-updates",
+      "enabled": true,
+      "dependencyDashboardApproval": true,
+      "addLabels": [
+        "major"
+      ]
+    },
+    {
+      "description": "docker-base on main: minor and patch are not separated, so only the highest (minor) update is proposed if both exist",
+      "matchBaseBranches": [
+        "main"
+      ],
+      "matchDepNames": [
+        "icellmobilsoft/base"
+      ],
+      "separateMinorPatch": false
+    },
+    {
+      "description": "docker-base patch updates on old release branches (< 6.0.x) break the images, so they are created only after approval on the Dependency Dashboard",
+      "matchBaseBranches": [
+        "/^release\\/docker-wildfly-[0-5]\\.\\d+\\.x$/"
+      ],
+      "matchDepNames": [
+        "icellmobilsoft/base"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "groupName": "docker-base",
+      "groupSlug": "docker-base-patch-updates",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "docker-base minor updates on main are created automatically, without Dependency Dashboard approval",
+      "matchBaseBranches": [
+        "main"
+      ],
+      "matchDepNames": [
+        "icellmobilsoft/base"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "groupName": "docker-base",
+      "groupSlug": "docker-base-minor-updates",
+      "enabled": true,
+      "dependencyDashboardApproval": false
+    },
+    {
+      "description": "docker-base minor updates on release branches >= 6.0.x are created only after approval on the Dependency Dashboard (patch updates stay automatic and separate)",
+      "matchBaseBranches": [
+        "/^release\\/docker-wildfly-([6-9]|[1-9]\\d+)\\.\\d+\\.x$/"
+      ],
+      "matchDepNames": [
+        "icellmobilsoft/base"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "groupName": "docker-base",
+      "groupSlug": "docker-base-minor-updates",
+      "enabled": true,
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "docker-base minor updates are never created on old release branches (< 6.0.x)",
+      "matchBaseBranches": [
+        "/^release\\/docker-wildfly-[0-5]\\.\\d+\\.x$/"
+      ],
+      "matchDepNames": [
+        "icellmobilsoft/base"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "WildFly minor updates on main are created automatically, without Dependency Dashboard approval",
+      "matchBaseBranches": [
+        "main"
+      ],
+      "matchDepNames": [
+        "org.wildfly:wildfly-galleon-pack"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "dependencyDashboardApproval": false
+    }
+  ]
+}
