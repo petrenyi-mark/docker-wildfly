@@ -1,0 +1,97 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Docker base and wildfly base release branches are processed.",
+    "Patch and minor updates for icellmobilsoft docker-base",
+    "Patch and minor updates for wildfly",
+    "Wildfly major updates are manually triggered on main branch."
+  ],
+  "extends": [
+    "config:recommended"
+  ],
+  "baseBranchPatterns": [
+    "main",
+    "release/docker-wildfly-\\d+\\.\\d+\\.x"
+  ],
+  "enabledManagers": [
+    "custom.regex"
+  ],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "commitBodyTable": true,
+  "separateMinorPatch": true,
+  "labels": [
+    "dependencies"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "icellmobilsoft base images (base-java25jre, builder-java21-galleon, builder-nexus-download share one tag)",
+      "managerFilePatterns": ["/(^|/)\\.env$/"],
+      "matchStrings": ["BASE_IMAGE_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "icellmobilsoft/base",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "WildFly version installed via Galleon",
+      "managerFilePatterns": ["/(^|/)\\.env$/"],
+      "matchStrings": ["WILDFLY_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "org.wildfly:wildfly-galleon-pack",
+      "datasourceTemplate": "maven",
+      "versioningTemplate": "maven"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Major updates are disabled by default",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "All patch updates in one PR, created automatically",
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "groupName": "dependencies",
+      "groupSlug": "patch-updates",
+      "addLabels": [
+        "patch"
+      ]
+    },
+    {
+      "description": "All minor updates in one PR, created automatically",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "groupName": "dependencies",
+      "groupSlug": "minor-updates",
+      "addLabels": [
+        "minor"
+      ]
+    },
+    {
+      "description": "Wildfly major updates in one PR, created only after approval on the Dependency Dashboard, only on main branch",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "matchBaseBranches": [
+        "main"
+      ],
+      "matchDepNames": [
+        "org.wildfly:wildfly-galleon-pack"
+      ],
+      "groupName": "dependencies",
+      "groupSlug": "major-updates",
+      "dependencyDashboardApproval": true,
+      "addLabels": [
+        "major",
+        "wildfly"
+      ]
+    }
+  ]
+}
